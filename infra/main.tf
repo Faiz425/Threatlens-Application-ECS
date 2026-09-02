@@ -38,6 +38,7 @@ module "ecs" {
 
   subnet_ids         = module.vpc.public_subnet_ids
   security_group_ids = [module.security_groups.ecs_security_group_id]
+  target_group_arn   = module.alb.target_group_arn
 }
 
 module "alb" {

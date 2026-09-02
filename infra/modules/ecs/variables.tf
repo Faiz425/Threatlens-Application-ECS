@@ -47,3 +47,8 @@ variable "security_group_ids" {
   description = "Security group IDs for the ECS service network configuration."
   type        = list(string)
 }
+
+variable "target_group_arn" {
+  description = "ARN of the ALB target group"
+  type        = string
+}
