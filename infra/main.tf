@@ -11,3 +11,57 @@ module "ecr" {
 
   repository_name = "threatlens"
 }
+
+module "iam" {
+  source = "./modules/iam"
+
+  execution_role_name = "threatlens-ecs-execution-role"
+}
+
+module "security_groups" {
+  source = "./modules/security-groups"
+
+  vpc_id = module.vpc.vpc_id
+}
+
+module "ecs" {
+  source = "./modules/ecs"
+
+  cluster_name       = "threatlens"
+  task_family        = "threatlens"
+  cpu                = 256
+  memory             = 512
+  execution_role_arn = module.iam.execution_role_arn
+  container_name     = "threatlens"
+  container_image    = "${module.ecr.repository_url}:latest"
+  service_name       = "threatlens"
+
+  subnet_ids         = module.vpc.public_subnet_ids
+  security_group_ids = [module.security_groups.ecs_security_group_id]
+}
+
+module "alb" {
+  source = "./modules/alb"
+
+  name               = "threatlens-alb"
+  vpc_id             = module.vpc.vpc_id
+  subnet_ids         = module.vpc.public_subnet_ids
+  security_group_ids = [module.security_groups.alb_security_group_id]
+}
+
+module "acm" {
+  source = "./modules/acm"
+
+  domain_name = "tm.threatlenslab.com"
+}
+
+module "route53" {
+  source = "./modules/route53"
+
+  domain_name  = "threatlenslab.com"
+  record_name  = "tm"
+  alb_dns_name = module.alb.alb_dns_name
+  alb_zone_id  = module.alb.alb_zone_id
+
+  certificate_domain_validation_options = module.acm.domain_validation_options
+}
