@@ -33,7 +33,7 @@ module "ecs" {
   memory             = 512
   execution_role_arn = module.iam.execution_role_arn
   container_name     = "threatlens"
-  container_image     = "${module.ecr.repository_url}:latest"
+  container_image    = "${module.ecr.repository_url}:latest"
   service_name       = "threatlens"
 
   subnet_ids         = module.vpc.public_subnet_ids
