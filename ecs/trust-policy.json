@@ -4,9 +4,15 @@
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "ecs-tasks.amazonaws.com"
+        "Federated": "arn:aws:iam::113462084471:oidc-provider/token.actions.githubusercontent.com"
       },
-      "Action": "sts:AssumeRole"
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+          "token.actions.githubusercontent.com:sub": "repo:Faiz425@218770757/Threatlens-Application-ECS@1353521898:ref:refs/heads/main"
+        }
+      }
     }
   ]
 }
