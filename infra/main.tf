@@ -1,3 +1,11 @@
+terraform {
+  backend "s3" {
+    bucket = "threatlens-terraform-state-113462084471"
+    key    = "threatlens/terraform.tfstate"
+    region = "eu-west-2"
+  }
+}
+
 module "vpc" {
   source = "./modules/vpc"
 
