@@ -1,0 +1,148 @@
+
+name: Deploy to ECS
+
+on:
+  workflow_dispatch:
+
+  workflow_run:
+    workflows:
+      - Push Docker Image to ECR
+    types:
+      - completed
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-west-2
+  ECR_REPOSITORY: threatlens
+  ECS_CLUSTER: threatlens
+  ECS_SERVICE: threatlens
+  CONTAINER_NAME: threatlens
+
+jobs:
+  deploy:
+    name: Deploy to ECS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check previous workflow
+        if: ${{ github.event_name == 'workflow_run' }}
+        run: |
+          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+            echo "ECR workflow did not complete successfully."
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::113462084471:role/threatlens-github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get current ECS task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition ${{ env.ECS_SERVICE }} \
+            --region ${{ env.AWS_REGION }} \
+            --query taskDefinition \
+            --output json > ecs/task-definition-current.json
+
+      - name: Update container image
+        env:
+          IMAGE_URI: 113462084471.dkr.ecr.eu-west-2.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
+        run: |
+          python - <<'PY'
+          import json
+          import os
+
+          path = "ecs/task-definition-current.json"
+
+          with open(path) as f:
+              task = json.load(f)
+
+          task["containerDefinitions"][0]["image"] = os.environ["IMAGE_URI"]
+
+          allowed = [
+              "family",
+              "taskRoleArn",
+              "executionRoleArn",
+              "networkMode",
+              "containerDefinitions",
+              "volumes",
+              "placementConstraints",
+              "requiresCompatibilities",
+              "cpu",
+              "memory",
+              "pidMode",
+              "ipcMode",
+              "proxyConfiguration",
+              "inferenceAccelerators",
+              "ephemeralStorage",
+              "runtimePlatform"
+          ]
+
+          cleaned = {
+              key: task[key]
+              for key in allowed
+              if key in task
+          }
+
+          with open(path, "w") as f:
+              json.dump(cleaned, f)
+
+          PY
+
+      - name: Register new ECS task definition
+        id: task-definition
+        run: |
+          TASK_DEFINITION=$(aws ecs register-task-definition \
+            --cli-input-json file://ecs/task-definition-current.json \
+            --region ${{ env.AWS_REGION }} \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+
+          echo "task-definition=$TASK_DEFINITION" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --task-definition ${{ steps.task-definition.outputs.task-definition }} \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Wait for ECS service to become stable
+        run: |
+          aws ecs wait services-stable \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --services ${{ env.ECS_SERVICE }} \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Verify ECS deployment
+        run: |
+          aws ecs describe-services \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --services ${{ env.ECS_SERVICE }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'services[0].{Status:status,Desired:desiredCount,Running:runningCount}' \
+            --output table
+
+      - name: Verify ALB target health
+        run: |
+          TARGET_GROUP_ARN=$(aws elbv2 describe-target-groups \
+            --names threatlens-alb-tg \
+            --region ${{ env.AWS_REGION }} \
+            --query 'TargetGroups[0].TargetGroupArn' \
+            --output text)
+
+          aws elbv2 describe-target-health \
+            --target-group-arn "$TARGET_GROUP_ARN" \
+            --region ${{ env.AWS_REGION }} \
+            --query 'TargetHealthDescriptions[].{IP:Target.Id,State:TargetHealth.State,Reason:TargetHealth.Reason}' \
+            --output table
