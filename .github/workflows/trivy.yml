@@ -33,7 +33,6 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
-          trivyignores: '.trivyignore'
-          # Uncomment below only as a temporary measure while dependency
-          # upgrades are in progress — prefer fixing msgpack/setuptools instead.
-          # trivyignores: '.trivyignore'
+         # Uncomment below only as a temporary measure while dependency
+        # upgrades are in progress — prefer fixing msgpack/setuptools instead.
+          
