@@ -1,0 +1,82 @@
+
+name: Terraform
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Terraform action to perform"
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+        default: plan
+
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/**"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-west-2
+  ECR_REPOSITORY: threatlens
+
+jobs:
+  terraform:
+    name: Terraform ${{ github.event.inputs.action || 'plan' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::113462084471:role/threatlens-github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: infra
+        run: terraform init
+
+      - name: Terraform Format Check
+        working-directory: infra
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        working-directory: infra
+        run: terraform validate
+
+      - name: Terraform Plan
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'plan' }}
+        working-directory: infra
+        run: |
+          terraform plan \
+            -var="container_image=113462084471.dkr.ecr.eu-west-2.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest"
+
+      - name: Terraform Apply
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply' }}
+        working-directory: infra
+        run: |
+          terraform apply \
+            -auto-approve \
+            -var="container_image=113462084471.dkr.ecr.eu-west-2.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest"
+
+      - name: Terraform Destroy
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}
+        working-directory: infra
+        run: |
+          terraform destroy \
+            -auto-approve \
+            -var="container_image=113462084471.dkr.ecr.eu-west-2.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest"
