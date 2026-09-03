@@ -5,6 +5,8 @@ on:
     branches:
       - main
 
+  workflow_dispatch:
+
 permissions:
   id-token: write
   contents: read
@@ -17,32 +19,49 @@ env:
   CONTAINER_NAME: threatlens
 
 jobs:
-  deploy:
-    name: Build, Scan and Deploy
+
+  terraform-plan:
+    name: Terraform Plan
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # TEMPORARY DEBUG STEP
-      - name: Debug GitHub OIDC claims
-        uses: actions/github-script@v7
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          script: |
-            const token = await core.getIDToken('sts.amazonaws.com');
+          role-to-assume: arn:aws:iam::113462084471:role/threatlens-github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
 
-            const payload = JSON.parse(
-              Buffer.from(
-                token.split('.')[1],
-                'base64url'
-              ).toString()
-            );
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-            console.log('OIDC issuer:', payload.iss);
-            console.log('OIDC audience:', payload.aud);
-            console.log('OIDC subject:', payload.sub);
+      - name: Terraform Init
+        working-directory: infra
+        run: terraform init
+
+      - name: Terraform Format Check
+        working-directory: infra
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        working-directory: infra
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: infra
+        run: |
+          terraform plan \
+            -var="container_image=113462084471.dkr.ecr.eu-west-2.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
+
+  build-and-scan:
+    name: Build and Scan Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -51,117 +70,87 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
-        id: login-ecr
+        id: ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build Docker image
         env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
         run: |
-          docker build -t $REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }} .
-          docker tag $REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
-            $REGISTRY/${{ env.ECR_REPOSITORY }}:latest
+          docker build \
+            -t $REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
+            .
 
       - name: Run Trivy vulnerability scan
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          image-ref: ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
           format: table
           exit-code: 0
           ignore-unfixed: true
           severity: CRITICAL,HIGH
 
-      - name: Push Docker image to ECR
+      - name: Push image to ECR
         env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
         run: |
           docker push $REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
-          docker push $REGISTRY/${{ env.ECR_REPOSITORY }}:latest
 
-      - name: Download current ECS task definition
+  terraform-deploy:
+    name: Terraform Apply and ECS Deploy
+    needs:
+      - terraform-plan
+      - build-and-scan
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::113462084471:role/threatlens-github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: infra
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: infra
         run: |
-          aws ecs describe-task-definition \
-            --task-definition ${{ env.ECS_SERVICE }} \
-            --query taskDefinition \
-            --output json > ecs/task-definition-current.json
-
-      - name: Update task definition image
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: |
-          python - <<'PY'
-          import json
-          import os
-
-          path = "ecs/task-definition-current.json"
-
-          with open(path) as f:
-              task = json.load(f)
-
-          task["containerDefinitions"][0]["image"] = (
-              f"{os.environ['REGISTRY']}/"
-              f"{os.environ['ECR_REPOSITORY']}:"
-              f"{os.environ['GITHUB_SHA']}"
-          )
-
-          allowed = [
-              "family",
-              "taskRoleArn",
-              "executionRoleArn",
-              "networkMode",
-              "containerDefinitions",
-              "volumes",
-              "placementConstraints",
-              "requiresCompatibilities",
-              "cpu",
-              "memory",
-              "pidMode",
-              "ipcMode",
-              "proxyConfiguration",
-              "inferenceAccelerators",
-              "ephemeralStorage",
-              "runtimePlatform"
-          ]
-
-          cleaned = {
-              key: task[key]
-              for key in allowed
-              if key in task
-          }
-
-          with open(path, "w") as f:
-              json.dump(cleaned, f)
-
-          PY
-
-      - name: Register new ECS task definition
-        id: task-definition
-        run: |
-          TASK_DEFINITION=$(aws ecs register-task-definition \
-            --cli-input-json file://ecs/task-definition-current.json \
-            --query 'taskDefinition.taskDefinitionArn' \
-            --output text)
-
-          echo "task-definition=$TASK_DEFINITION" >> "$GITHUB_OUTPUT"
-
-      - name: Deploy to ECS
-        run: |
-          aws ecs update-service \
-            --cluster ${{ env.ECS_CLUSTER }} \
-            --service ${{ env.ECS_SERVICE }} \
-            --task-definition ${{ steps.task-definition.outputs.task-definition }} \
-            --force-new-deployment
+          terraform apply \
+            -auto-approve \
+            -var="container_image=113462084471.dkr.ecr.eu-west-2.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
 
       - name: Wait for ECS deployment
         run: |
           aws ecs wait services-stable \
             --cluster ${{ env.ECS_CLUSTER }} \
-            --services ${{ env.ECS_SERVICE }}
+            --services ${{ env.ECS_SERVICE }} \
+            --region ${{ env.AWS_REGION }}
 
-      - name: Verify deployment
+      - name: Verify ECS deployment
         run: |
           aws ecs describe-services \
             --cluster ${{ env.ECS_CLUSTER }} \
             --services ${{ env.ECS_SERVICE }} \
+            --region ${{ env.AWS_REGION }} \
             --query 'services[0].{Desired:desiredCount,Running:runningCount,Status:status}' \
             --output table
+
+      - name: Verify ALB target health
+        run: |
+          TARGET_GROUP_ARN=$(terraform -chdir=infra output -raw target_group_arn)
+
+          aws elbv2 describe-target-health \
+            --target-group-arn "$TARGET_GROUP_ARN" \
+            --region ${{ env.AWS_REGION }} \
+            --query 'TargetHealthDescriptions[].{IP:Target.Id,State:TargetHealth.State,Reason:TargetHealth.Reason}' \
+            --output table
+
