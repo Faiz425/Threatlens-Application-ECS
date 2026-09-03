@@ -31,12 +31,12 @@ resource "aws_ecs_task_definition" "this" {
       ]
 
       healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost/health || exit 1"]
-        interval    = 30
-        timeout     = 5
-        retries     = 3
-        startPeriod = 30
-      }
+  command     = ["CMD-SHELL", "/opt/venv/bin/python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:80/health')\" || exit 1"]
+  interval    = 30
+  timeout     = 5
+  retries     = 3
+  startPeriod = 30
+}
     }
   ])
 
