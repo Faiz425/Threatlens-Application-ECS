@@ -26,13 +26,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # TEMPORARY DEBUG STEP
       - name: Debug GitHub OIDC claims
         uses: actions/github-script@v7
         with:
           script: |
             const token = await core.getIDToken('sts.amazonaws.com');
+
             const payload = JSON.parse(
-              Buffer.from(token.split('.')[1], 'base64url').toString()
+              Buffer.from(
+                token.split('.')[1],
+                'base64url'
+              ).toString()
             );
 
             console.log('OIDC issuer:', payload.iss);
@@ -73,14 +78,20 @@ jobs:
           docker push $REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
           docker push $REGISTRY/${{ env.ECR_REPOSITORY }}:latest
 
-      - name: Update ECS task definition
+      - name: Download current ECS task definition
         run: |
           aws ecs describe-task-definition \
             --task-definition ${{ env.ECS_SERVICE }} \
-            --query taskDefinition > ecs/task-definition-current.json
+            --query taskDefinition \
+            --output json > ecs/task-definition-current.json
 
+      - name: Update task definition image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
           python - <<'PY'
           import json
+          import os
 
           path = "ecs/task-definition-current.json"
 
@@ -88,7 +99,9 @@ jobs:
               task = json.load(f)
 
           task["containerDefinitions"][0]["image"] = (
-              "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
+              f"{os.environ['REGISTRY']}/"
+              f"{os.environ['ECR_REPOSITORY']}:"
+              f"{os.environ['GITHUB_SHA']}"
           )
 
           allowed = [
