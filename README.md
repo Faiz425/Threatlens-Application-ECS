@@ -483,22 +483,22 @@ The repository includes screenshots showing the actual deployment.
 
 ### Live Application
 
-![alt text](image-1.png)
+![alt text](image.png)
 
 ### GitHub Actions
 
-![alt text](image-4.png)
+![alt text](image-2.png)
 ![alt text](image-3.png)
 
 ### Trivy
 
-![alt text](image-2.png)
+![alt text](image-3.png)
 
 ### Amazon ECR
 
-![alt text](image-7.png)
+![alt text](image-4.png)
 
-![alt text](image-8.png)
+![alt text](image-5.png)
 
 ### Amazon ECS
 
@@ -506,12 +506,12 @@ The repository includes screenshots showing the actual deployment.
 
 ### ALB Target Health
 
-![alt text](image-5.png)
+![alt text](image-7.png)
 
 ### Terraform
 
-**![alt text](image-4.png)
-*![alt text](image-5.png)*.
+![alt text](image-8.png)
+![alt text](image-9.png)
 
 
 ---
