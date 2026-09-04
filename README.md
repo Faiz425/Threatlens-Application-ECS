@@ -483,31 +483,34 @@ The repository includes screenshots showing the actual deployment.
 
 ### Live Application
 
-*Add screenshot of the application running at `https://tm.threatlenslab.com`.*
+*![alt text](image-1.png)*
 
 ### GitHub Actions
 
-*Add screenshot of the successful CI/CD pipeline.*
+*![alt text](image-2.png)*
+*![alt text](image-3.png)*
 
 ### Trivy
 
-*Add screenshot of the successful Trivy scan.*
+*![alt text](image-6.png)*
 
 ### Amazon ECR
 
-*Add screenshot showing the `threatlens:latest` image.*
+*![alt text](image-7.png)
+*![alt text](image-8.png)
 
 ### Amazon ECS
 
-*Add screenshot showing the running ECS service.*
+*![alt text](image-9.png)*
 
 ### ALB Target Health
 
-*Add screenshot showing the ECS target as **healthy**.*
+*![alt text](image-10.png)**.*
 
 ### Terraform
 
-*Add screenshot showing a successful Terraform plan/apply.*
+**![alt text](image-4.png)*
+*![alt text](image-5.png)*.*
 
 ### HTTPS
 
