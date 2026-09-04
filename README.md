@@ -58,7 +58,7 @@ The project gave me practical experience with:
 
 ---
 
-##  Architecture
+##  Deployment Workflow
 
 ```text
                          GitHub
