@@ -497,6 +497,7 @@ The repository includes screenshots showing the actual deployment.
 ### Amazon ECR
 
 ![alt text](image-7.png)
+
 ![alt text](image-8.png)
 
 ### Amazon ECS
