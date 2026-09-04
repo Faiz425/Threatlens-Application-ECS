@@ -416,11 +416,7 @@ Terraform state is stored remotely using an Amazon S3 backend.
 
 ##  Remote Terraform State
 
-The project uses an S3 backend rather than relying solely on local Terraform state.
-
-This allows the infrastructure state to be maintained independently from the local development environment and accessed by the CI/CD workflow.
-
-Using remote state also helped me understand the additional AWS permissions required when Terraform runs from GitHub Actions.
+Terraform state is stored remotely in Amazon S3, with S3 native state locking enabled using use_lockfile = true. This helps prevent concurrent Terraform operations from modifying the state at the same time.
 
 ---
 
