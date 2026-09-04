@@ -483,35 +483,45 @@ The repository includes screenshots showing the actual deployment.
 
 ### Live Application
 
-![alt text](image.png)
+<img width="1159" height="716" alt="Screenshot 2026-09-04 114335" src="https://github.com/user-attachments/assets/076eb459-e43d-461b-938b-cf5216f239d0" />
+
 
 ### GitHub Actions
 
-![alt text](image-2.png)
-![alt text](image-3.png)
+<img width="2478" height="1306" alt="image" src="https://github.com/user-attachments/assets/b5996efc-1ebd-4f9d-a1cf-cc1bebdd5f12" />
+
+<img width="2475" height="1273" alt="image" src="https://github.com/user-attachments/assets/11184b24-b329-4f46-9283-f272510a06d1" />
+
 
 ### Trivy
 
-![alt text](image-3.png)
+<img width="2463" height="958" alt="image" src="https://github.com/user-attachments/assets/18791f61-8fa5-42d7-ba35-247e1deec423" />
+
 
 ### Amazon ECR
 
-![alt text](image-4.png)
+<img width="2493" height="742" alt="image" src="https://github.com/user-attachments/assets/3f667569-5a00-4f4a-8f9b-be51036dcad7" />
 
-![alt text](image-5.png)
+
+<img width="1954" height="580" alt="image" src="https://github.com/user-attachments/assets/de065924-ae94-48a1-8b7f-56156f09322f" />
+
 
 ### Amazon ECS
 
-![alt text](image-6.png)
+<img width="2067" height="760" alt="image" src="https://github.com/user-attachments/assets/fa2eb161-000d-4459-8925-2c6b72f89df9" />
+
 
 ### ALB Target Health
 
-![alt text](image-7.png)
+<img width="2088" height="732" alt="image" src="https://github.com/user-attachments/assets/baffab9b-b0c5-467c-a3c1-c5f6fdd09041" />
+
 
 ### Terraform
 
-![alt text](image-8.png)
-![alt text](image-9.png)
+<img width="2473" height="1282" alt="image" src="https://github.com/user-attachments/assets/92536387-d31d-49e3-b353-67a316b15e0a" />
+
+<img width="2470" height="1212" alt="image" src="https://github.com/user-attachments/assets/0a4ae6fc-83d7-4ef7-99cf-e625690afbc9" />
+
 
 
 ---
