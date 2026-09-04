@@ -29,6 +29,13 @@ The infrastructure is managed using Terraform, while GitHub Actions automates th
 
 The application is publicly accessible through a custom domain over HTTPS.
 
+## Architecture
+
+The diagram below shows the AWS infrastructure, CI/CD pipeline,
+container security scanning and Terraform workflow used to deploy ThreatLens.
+
+![ThreatLens Architecture]
+![alt text](image.png)
 ---
 
 ##  What I Wanted to Build
