@@ -496,8 +496,8 @@ The repository includes screenshots showing the actual deployment.
 
 ### Amazon ECR
 
-*![alt text](image-7.png)
-*![alt text](image-8.png)
+*![Amazon ECR](image-7.png)
+*!![Amazon ECR](image-8.png)
 
 ### Amazon ECS
 
@@ -505,7 +505,7 @@ The repository includes screenshots showing the actual deployment.
 
 ### ALB Target Health
 
-*![alt text](image-10.png)**.*
+(image-10.png)
 
 ### Terraform
 
