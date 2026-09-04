@@ -34,7 +34,8 @@ The application is publicly accessible through a custom domain over HTTPS.
 The diagram below shows the AWS infrastructure, CI/CD pipeline,
 container security scanning and Terraform workflow used to deploy ThreatLens.
 
-![ThreatLens Architecture]
+Architecture Diagram
+
 ![alt text](image.png)
 ---
 
