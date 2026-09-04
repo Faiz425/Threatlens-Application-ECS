@@ -15,6 +15,20 @@
 
 **Live application:** https://tm.threatlenslab.com
 
+## Key Features
+
+- Containerised Flask application
+- AWS ECS deployment
+- Amazon ECR container registry
+- Terraform Infrastructure as Code
+- GitHub Actions CI/CD
+- GitHub OIDC authentication
+- Trivy container vulnerability scanning
+- Application Load Balancer
+- Route 53 custom DNS
+- HTTPS with AWS Certificate Manager
+- S3 remote Terraform state and locking
+
 ---
 
 ##  Project Overview
