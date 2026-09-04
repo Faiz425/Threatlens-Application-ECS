@@ -510,11 +510,9 @@ The repository includes screenshots showing the actual deployment.
 ### Terraform
 
 **![alt text](image-4.png)
-*![alt text](image-5.png)*.
+*![alt text](image-5.png)*
 
-### HTTPS
 
-*Add screenshot showing the application running through the HTTPS domain.*
 
 ---
 
