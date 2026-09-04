@@ -118,7 +118,7 @@ The VPC contains:
 * ECS service
 * Security groups
 
-> **Architecture diagram:** I recommend replacing the diagram above with a Draw.io diagram once you've created it. The diagram should show the VPC, two availability zones, ALB, ECS, ECR, Route 53 and ACM.
+
 
 ---
 
