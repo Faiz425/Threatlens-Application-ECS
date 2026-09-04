@@ -483,7 +483,7 @@ The repository includes screenshots showing the actual deployment.
 
 ### Live Application
 
-![alt text](image-11.png)
+![alt text](<Screenshot 2026-09-04 114335.png>)
 
 ### GitHub Actions
 
