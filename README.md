@@ -487,25 +487,25 @@ The repository includes screenshots showing the actual deployment.
 
 ### GitHub Actions
 
-![alt text](image-2.png)
+![alt text](image-4.png)
 ![alt text](image-3.png)
 
 ### Trivy
 
-![alt text](image-6.png)
+![alt text](image-2.png)
 
 ### Amazon ECR
 
-![Amazon ECR](image-7.png)
-![Amazon ECR](image-8.png)
+![alt text](image-7.png)
+![alt text](image-8.png)
 
 ### Amazon ECS
 
-![alt text](image-9.png)
+![alt text](image-6.png)
 
 ### ALB Target Health
 
-![alt text](image-12.png)
+![alt text](image-5.png)
 
 ### Terraform
 
