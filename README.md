@@ -49,7 +49,8 @@ The diagram below shows the AWS infrastructure, CI/CD pipeline,
 container security scanning and Terraform workflow used to deploy ThreatLens.
 
 
-<img width="1536" height="1024" alt="ChatGPT Image Sep 4, 2026, 04_28_38 PM" src="https://github.com/user-attachments/assets/e16e2260-89c6-4310-84bb-fd4b45cbbedc" />
+<img width="1536" height="1024" alt="ad97d187-5d46-44a2-aee5-c40fe4fdeaf4" src="https://github.com/user-attachments/assets/8fa156e8-e344-4f4f-bbe6-36586e1a8ae6" />
+
 
 
 
